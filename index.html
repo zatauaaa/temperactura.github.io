@@ -5,10 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Temperatura de Gasapos</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    h1 {
+      color: green; /* Letras verdes para el título */
+    }
+  </style>
 </head>
 <body>
   <h1>Temperatura de Gasapos</h1>
-  <img src="https://via.placeholder.com/150?text=Conejo+en+Caja" alt="Conejo en Caja">
   <div>
     <canvas id="temperatureChart" width="400" height="200"></canvas>
   </div>
@@ -30,7 +34,14 @@
     async function fetchTemperatureData() {
       const response = await fetch(apiUrl); // Llamada a tu URL
       const data = await response.json();  // Datos devueltos como JSON
-      temperatureData = data;
+
+      // Formatear la fecha para mostrar solo el día
+      temperatureData = data.map(entry => {
+        return {
+          fecha: new Date(entry.fecha).toISOString().split('T')[0], // Extrae solo la fecha
+          temperatura: entry.temperatura
+        };
+      });
 
       createChart();
     }
