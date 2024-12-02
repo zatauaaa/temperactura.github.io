@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monitoreo de Temperatura</title>
+  <title>Temperatura de Gasapos</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>Monitoreo de Temperatura</h1>
+  <h1>Temperatura de Gasapos</h1>
+  <img src="https://via.placeholder.com/150?text=Conejo+en+Caja" alt="Conejo en Caja">
   <div>
     <canvas id="temperatureChart" width="400" height="200"></canvas>
   </div>
@@ -22,13 +23,15 @@
     const ctx = document.getElementById('temperatureChart').getContext('2d');
     let temperatureChart;
 
-    // Función para obtener los datos desde Google Sheets
+    // Cambia la URL aquí con la de tu Google Apps Script
+    const apiUrl = "https://script.google.com/macros/s/AKfycbxxZhvNEziuSdlFehugSzbOcmEvjFnFN7qoVjrxtlj3Ah4CkSJr_cy4ufak51bmNKS8ew/exec";
+
+    // Función para obtener los datos desde Google Sheets a través del Apps Script
     async function fetchTemperatureData() {
-      const response = await fetch("https://script.google.com/macros/s/AKfycbxEGSxQf6t16LNFi12VcKb7lQQmDquPrglxbeeSfNM8kaAfpwyXKd350A7uI79YH0Fdwg/exec");
-      const data = await response.json();
+      const response = await fetch(apiUrl); // Llamada a tu URL
+      const data = await response.json();  // Datos devueltos como JSON
       temperatureData = data;
 
-      // Crear el gráfico con los datos obtenidos
       createChart();
     }
 
@@ -38,7 +41,7 @@
       const temperatures = temperatureData.map(entry => entry.temperatura);
 
       if (temperatureChart) {
-        temperatureChart.destroy(); // Destruir gráfico previo
+        temperatureChart.destroy(); // Destruir gráfico previo si existe
       }
 
       temperatureChart = new Chart(ctx, {
@@ -54,24 +57,14 @@
         },
         options: {
           scales: {
-            x: { 
-              title: {
-                display: true,
-                text: 'Fecha'
-              }
-            },
-            y: {
-              title: {
-                display: true,
-                text: 'Temperatura (°C)'
-              }
-            }
+            x: { title: { display: true, text: 'Fecha' } },
+            y: { title: { display: true, text: 'Temperatura (°C)' } }
           }
         }
       });
     }
 
-    // Función para filtrar los datos por fecha
+    // Filtrar datos por fecha seleccionada
     function filterData() {
       const selectedDate = document.getElementById('datePicker').value;
       const filteredData = temperatureData.filter(entry => entry.fecha === selectedDate);
@@ -82,7 +75,7 @@
       }
     }
 
-    // Llamar la función para cargar los datos
+    // Llamar la función para cargar los datos al cargar la página
     fetchTemperatureData();
   </script>
 </body>
