@@ -19,18 +19,19 @@
   <br>
   <h3>Selecciona el día</h3>
   <input type="date" id="datePicker">
-  <button onclick="filterData()">Mostrar Temperatura</button>
+  <button onclick="filterData()">Mostrar Datos del Día</button>
   <p id="selectedTemperature"></p>
+  <p id="averageTemperature"></p>
   <div>
-    <canvas id="dailyAverageChart" width="400" height="200"></canvas>
+    <canvas id="dailyChart" width="400" height="200"></canvas>
   </div>
 
   <script>
     let temperatureData = [];
     const ctx = document.getElementById('temperatureChart').getContext('2d');
-    const dailyCtx = document.getElementById('dailyAverageChart').getContext('2d');
+    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
     let temperatureChart;
-    let dailyAverageChart;
+    let dailyChart;
 
     // Cambia la URL aquí con la de tu Google Apps Script
     const apiUrl = "https://script.google.com/macros/s/AKfycbxxZhvNEziuSdlFehugSzbOcmEvjFnFN7qoVjrxtlj3Ah4CkSJr_cy4ufak51bmNKS8ew/exec";
@@ -44,6 +45,7 @@
       temperatureData = data.map(entry => {
         return {
           fecha: new Date(entry.fecha).toISOString().split('T')[0], // Extrae solo la fecha
+          hora: new Date(entry.fecha).toLocaleTimeString(), // Extrae la hora
           temperatura: entry.temperatura
         };
       });
@@ -51,7 +53,7 @@
       createChart();
     }
 
-    // Crear el gráfico de temperatura general
+    // Crear el gráfico general de temperatura
     function createChart() {
       const labels = temperatureData.map(entry => entry.fecha);
       const temperatures = temperatureData.map(entry => entry.temperatura);
@@ -80,51 +82,49 @@
       });
     }
 
-    // Filtrar datos por fecha seleccionada y calcular el promedio
+    // Filtrar datos por fecha seleccionada y graficar las temperaturas del día
     function filterData() {
       const selectedDate = document.getElementById('datePicker').value;
       const filteredData = temperatureData.filter(entry => entry.fecha === selectedDate);
 
       if (filteredData.length > 0) {
-        // Mostrar promedio en el texto
-        const averageTemperature = filteredData.reduce((sum, entry) => sum + entry.temperatura, 0) / filteredData.length;
-        document.getElementById('selectedTemperature').innerText = 
-          `Temperatura promedio el ${selectedDate}: ${averageTemperature.toFixed(2)} °C`;
+        // Mostrar datos del día
+        document.getElementById('selectedTemperature').innerText = `Datos para el día ${selectedDate}:`;
+        
+        // Calcular y mostrar el promedio
+        const averageTemp = (filteredData.reduce((sum, entry) => sum + entry.temperatura, 0) / filteredData.length).toFixed(2);
+        document.getElementById('averageTemperature').innerText = `Promedio de Temperatura: ${averageTemp} °C`;
 
-        // Crear gráfico del promedio
-        createDailyAverageChart(selectedDate, averageTemperature);
+        // Crear gráfico para el día seleccionado
+        const times = filteredData.map(entry => entry.hora);
+        const temps = filteredData.map(entry => entry.temperatura);
+
+        if (dailyChart) {
+          dailyChart.destroy(); // Destruir gráfico previo si existe
+        }
+
+        dailyChart = new Chart(dailyCtx, {
+          type: 'line',
+          data: {
+            labels: times,
+            datasets: [{
+              label: `Temperaturas del Día (${selectedDate})`,
+              data: temps,
+              borderColor: 'rgba(255, 99, 132, 1)',
+              fill: false
+            }]
+          },
+          options: {
+            scales: {
+              x: { title: { display: true, text: 'Hora' } },
+              y: { title: { display: true, text: 'Temperatura (°C)' } }
+            }
+          }
+        });
       } else {
         document.getElementById('selectedTemperature').innerText = "No hay datos para esta fecha.";
-        if (dailyAverageChart) {
-          dailyAverageChart.destroy(); // Destruir el gráfico si no hay datos
-        }
+        document.getElementById('averageTemperature').innerText = "";
       }
-    }
-
-    // Crear gráfico de promedio diario
-    function createDailyAverageChart(date, averageTemperature) {
-      if (dailyAverageChart) {
-        dailyAverageChart.destroy(); // Destruir gráfico previo si existe
-      }
-
-      dailyAverageChart = new Chart(dailyCtx, {
-        type: 'bar',
-        data: {
-          labels: [date],
-          datasets: [{
-            label: 'Promedio de Temperatura (°C)',
-            data: [averageTemperature],
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          scales: {
-            y: { title: { display: true, text: 'Temperatura (°C)' }, beginAtZero: true }
-          }
-        }
-      });
     }
 
     // Llamar la función para cargar los datos al cargar la página
@@ -132,4 +132,3 @@
   </script>
 </body>
 </html>
-
